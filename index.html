@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vozes da História: Heróis Esquecidos</title>
+    
+    <!-- Tenta carregar bibliotecas externas (se tiver internet, fica mais bonito) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* --- CSS DE SEGURANÇA (GARANTE FUNCIONAMENTO OFFLINE) --- */
+        
+        /* Utilitários essenciais */
+        .hidden { display: none !important; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #261F1E; 
+            color: #e7e5e4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* Padrão de fundo sutil embutido */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cg fill='%23D4C7B0' fill-opacity='0.05'%3E%3Ccircle cx='2' cy='2' r='1' /%3E%3Ccircle cx='8' cy='8' r='1' /%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        #game-container {
+            background-color: #292524;
+            max-width: 800px;
+            width: 100%;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: all 0.5s;
+        }
+
+        /* Botões Estilizados */
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary {
+            background-color: #ca8a04; /* Dourado */
+            color: white;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .btn-primary:hover { background-color: #a16207; }
+        
+        .btn-option {
+            background-color: #44403c;
+            color: white;
+            padding: 15px;
+            width: 100%;
+            margin-bottom: 8px;
+            text-align: center;
+            font-size: 1rem;
+            border: 1px solid #57534e;
+        }
+        .btn-option:hover { background-color: #57534e; }
+
+        /* Efeitos de Imagem */
+        .hero-shadowed {
+            filter: brightness(0) drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+            opacity: 0.8;
+            transform: scale(0.95);
+            transition: all 0.5s;
+        }
+
+        /* Animações */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Barra de Progresso */
+        .progress-container {
+            background-color: #44403c;
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(to right, #ca8a04, #ea580c);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        /* --- POPUP DE MEDALHA --- */
+        #medal-popup {
+            position: fixed;
+            top: 20px;
+            right: -400px;
+            width: 320px;
+            background-color: #1c1917;
+            border-left: 5px solid #ffd700;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+            transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efeito elástico */
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+        }
+        #medal-popup.show { right: 20px; }
+        
+        .medal-icon-popup { font-size: 2.5rem; margin-right: 10px; }
+
+        /* Cores das Medalhas */
+        .bronze { color: #cd7f32; }
+        .silver { color: #c0c0c0; }
+        .gold { color: #ffd700; }
+        .platinum { color: #e5e4e2; }
+
+        /* --- GALERIA DE MEDALHAS --- */
+        .medal-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+        .medal-card {
+            background-color: #44403c;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #57534e;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .medal-card-icon { font-size: 2rem; width: 40px; text-align: center; flex-shrink: 0; }
+        .medal-card.locked { opacity: 0.5; filter: grayscale(1); }
+        .medal-card.locked h4 { color: #a8a29e !important; }
+
+        /* --- ABAS DA TELA FINAL --- */
+        .tab-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .tab-button {
+            background-color: #44403c;
+            color: #a8a29e;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .tab-button.active {
+            background-color: #ca8a04;
+            color: #292524;
+        }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+
+        /* --- MODAL DE BIOGRAFIA --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 50;
+            padding: 20px;
+        }
+        .modal-content {
+            background: #292524;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            border: 1px solid #44403c;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+        }
+        .close-btn { 
+            position: absolute; top: 15px; right: 15px; 
+            background: none; color: #78716c; font-size: 1.2rem; 
+            padding: 5px; width: auto;
+        }
+        .close-btn:hover { color: white; }
+
+        /* Scrollbar personalizada para as galerias */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1c1917; }
+        ::-webkit-scrollbar-thumb { background: #57534e; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <!-- Cabeçalho -->
+        <header style="text-align: center; margin-bottom: 24px;">
+            <h1 style="font-size: 2.2rem; color: #fbbf24; margin: 0; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Vozes da História</h1>
+            <p style="color: #a8a29e; margin: 5px 0; font-size: 1.1rem;">Heróis e Heroínas Esquecidos</p>
+        </header>
+
+        <!-- Área de Progresso e Pontuação -->
+        <div style="margin-bottom: 24px; background: #1c1917; padding: 15px; border-radius: 12px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; font-size: 0.95rem; color: #a8a29e; margin-bottom: 8px;">
+                <span id="score-text" style="font-weight: bold; color: #fbbf24; font-size: 1.1rem;">Pontuação: 0</span>
+                <span id="progress-text">Herói 1 / 20</span>
+            </div>
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Tela de Início -->
+        <div id="start-screen" style="text-align: center; padding: 20px;">
+            <div style="font-size: 4rem; margin-bottom: 10px; color: #ca8a04;"><i class="fas fa-search-location"></i></div>
+            <h2 style="font-size: 1.8rem; margin-bottom: 16px; color: white; font-weight: bold;">Seja um Detetive da História!</h2>
+            <p style="margin-bottom: 30px; color: #d6d3d1; font-size: 1.1rem; line-height: 1.6;">Sua missão é descobrir <b>20 heróis e heroínas negros</b> que marcaram a história do Brasil. Use as pistas com sabedoria para revelar suas identidades e conquistar medalhas!</p>
+            <button id="start-button" class="btn-primary" style="font-size: 1.3rem; padding: 16px;">
+                COMEÇAR A INVESTIGAÇÃO
+            </button>
+        </div>
+
+        <!-- Tela Principal do Jogo (Oculta) -->
+        <main id="game-screen" class="hidden fade-in">
+            
+            <!-- Card do Herói -->
+            <div style="background-color: #44403c; padding: 20px; border-radius: 12px; margin-bottom: 24px; display: flex; flex-direction: row; align-items: center; gap: 24px; flex-wrap: wrap;">
+                <div style="width: 180px; height: 180px; background: #1c1917; border-radius: 12px; overflow: hidden; flex-shrink: 0; margin: 0 auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                    <img id="hero-image" src="https://placehold.co/200x200/3A3331/E2E8F0?text=???" alt="Retrato do Herói" style="width: 100%; height: 100%; object-fit: cover;" class="hero-shadowed">
+                </div>
+                <div style="flex: 1; text-align: left; min-width: 250px;">
+                    <h2 id="hero-name" style="font-size: 2.2rem; font-weight: 900; color: #57534e; margin: 0 0 15px 0;">???</h2>
+                    <div id="clues-area" style="min-height: 80px; display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Pistas aparecerão aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div id="action-area" style="margin-bottom: 24px;">
+                <button id="clue-button" style="background-color: #ea580c; color: white; padding: 14px; width: 100%; font-size: 1.1rem; border-radius: 10px; box-shadow: 0 4px 0 #9a3412;">
+                    Pedir uma Pista <i class="fas fa-search-plus"></i>
+                </button>
+            </div>
+
+            <!-- Opções de Resposta -->
+            <div id="options-area" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+                <!-- Botões de opção aparecerão aqui -->
+            </div>
+
+            <!-- Feedback -->
+            <div id="feedback-area" style="text-align: center; font-size: 1.3rem; font-weight: bold; margin-top: 20px; min-height: 30px; text-shadow: 1px 1px 2px black;">
+                <!-- "Correto!" ou "Tente de novo..." -->
+            </div>
+
+        </main>
+
+        <!-- Tela Final (Oculta) -->
+        <div id="end-screen" class="hidden fade-in" style="text-align: center;">
+            <h2 style="font-size: 2.5rem; color: #fbbf24; margin-bottom: 10px; font-weight: 900;">Missão Cumprida!</h2>
+            <p style="font-size: 1.3rem; margin-bottom: 25px;">Sua pontuação final: <span id="final-score-value" style="font-weight: bold; color: white; font-size: 1.5rem;">0</span></p>
+            
+            <!-- Abas da Tela Final -->
+            <div class="tab-buttons">
+                <button id="show-hero-gallery-btn" class="tab-button active"><i class="fas fa-users"></i> Galeria de Heróis</button>
+                <button id="show-medal-gallery-btn" class="tab-button"><i class="fas fa-award"></i> Galeria de Medalhas</button>
+            </div>
+
+            <!-- Conteúdo das Abas -->
+            <div id="hero-gallery-content" class="tab-content active">
+                <div id="gallery-area" style="max-height: 450px; overflow-y: auto; background: #1c1917; padding: 15px; border-radius: 12px; text-align: left; display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Galeria de heróis -->
+                </div>
+            </div>
+
+            <div id="medal-gallery-content" class="tab-content">
+                <div id="medal-gallery-area" style="max-height: 450px; overflow-y: auto; background: #1c1917; padding: 15px; border-radius: 12px; text-align: left;">
+                    <!-- Galeria de medalhas -->
+                </div>
+            </div>
+
+            <button id="restart-button" class="btn-primary" style="margin-top: 25px; font-size: 1.3rem;">
+                <i class="fas fa-redo"></i> Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Biografia -->
+    <div id="bio-modal" class="modal-overlay hidden">
+        <div class="modal-content fade-in">
+            <button id="close-modal" class="close-btn"><i class="fas fa-times"></i></button>
+            
+            <img id="modal-image" src="" alt="Retrato" style="width: 140px; height: 140px; border-radius: 50%; border: 5px solid #fbbf24; object-fit: cover; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+            
+            <h2 id="modal-name" style="font-size: 1.8rem; font-weight: bold; color: #fbbf24; margin: 0 0 15px 0;"></h2>
+            <p id="modal-bio" style="color: #e7e5e4; text-align: left; line-height: 1.6; margin-bottom: 25px; font-size: 1.05rem; background: #1c1917; padding: 15px; border-radius: 8px; border: 1px solid #44403c; max-height: 200px; overflow-y: auto;"></p>
+            
+            <button id="next-hero-button" class="btn-primary">
+                Próximo Herói <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Popup de Medalha -->
+    <div id="medal-popup">
+        <div id="medal-popup-icon" class="medal-icon-popup">
+            <i class="fas fa-medal"></i>
+        </div>
+        <div>
+            <h4 id="medal-popup-title" style="font-weight: bold; margin: 0; color: #fff; font-size: 1.1rem;">Medalha Desbloqueada!</h4>
+            <p id="medal-popup-desc" style="font-size: 0.9rem; color: #a8a29e; margin: 5px 0 0 0;">Descrição da medalha</p>
+        </div>
+    </div>
+
+
+    <script>
+        // --- BANCO DE DADOS DOS HERÓIS ---
+        const heroesData = [
+            // { id, name, image, bio, clues, gender, category }
+            {
+                id: 1, name: "Dandara dos Palmares", image: "Dandara.png", gender: 'f', category: 'resistencia',
+                bio: "Foi uma guerreira fundamental no Quilombo dos Palmares. Ao lado de Zumbi, lutou e liderou mulheres e homens contra os ataques. Dominava técnicas de capoeira e é um símbolo de liderança feminina e resistência.",
+                clues: ["Eu fui uma guerreira e líder no Quilombo dos Palmares.", "Lutei ao lado de Zumbi, mas minha história é única.", "Sou um símbolo de coragem e da luta da mulher negra."]
+            },
+            {
+                id: 2, name: "Luiz Gama", image: "Luiz-Gama-foto-1.jpg", gender: 'm', category: 'politica',
+                bio: "Nascido livre, foi vendido como escravo pelo próprio pai. Aprendeu a ler e escrever, conquistou sua liberdade e se tornou advogado, poeta e jornalista. Usou a lei para libertar centenas de escravizados, tornando-se um dos maiores abolicionistas do Brasil.",
+                clues: ["Fui vendido como escravo, mesmo nascendo livre.", "Usei as leis e a justiça para libertar mais de 500 escravizados.", "Também fui poeta e jornalista, conhecido como o 'Advogado dos Escravos'."]
+            },
+            {
+                id: 3, name: "Antonieta de Barros", image: "Antonieta_de_Barros.webp", gender: 'f', category: 'politica',
+                bio: "Foi jornalista, professora e a primeira mulher negra a ser eleita deputada estadual no Brasil, em 1934. Lutou apaixonadamente pela educação para todos e pelos direitos das mulheres, deixando um legado de pioneirismo e coragem.",
+                clues: ["Fui a primeira mulher negra eleita deputada estadual no Brasil.", "Minha principal bandeira de luta era a educação para todos.", "Atuei como jornalista e professora em Santa Catarina."]
+            },
+            {
+                id: 4, name: "João Cândido", image: "Joao_Candido-e1716658792202.jpg", gender: 'm', category: 'resistencia',
+                bio: "Foi um marinheiro que liderou a 'Revolta da Chibata' em 1910. Ele e seus companheiros se rebelaram contra os castigos físicos brutais (chibatadas) na Marinha, exigindo o fim dessa prática e melhores condições. É conhecido como 'O Almirante Negro'.",
+                clues: ["Eu era marinheiro da Marinha do Brasil no início do século XX.", "Liderei uma grande revolta contra os castigos físicos.", "Fiquei conhecido pelo apelido de 'O Almirante Negro'."]
+            },
+            {
+                id: 5, name: "Maria Firmina dos Reis", image: "63149551_1005-1hrutrm9xq2wp.webp", gender: 'f', category: 'cultura',
+                bio: "É considerada a primeira romancista brasileira. Em 1859, publicou o livro 'Úrsula', que foi um dos primeiros romances a criticar a escravidão do ponto de vista dos escravizados. Foi também professora e fundou a primeira escola mista e gratuita do Maranhão.",
+                clues: ["Sou considerada a primeira romancista mulher do Brasil.", "Escrevi um livro chamado 'Úrsula', que denunciava a escravidão.", "Fui professora e fundei uma escola gratuita e mista no Maranhão."]
+            },
+            {
+                id: 6, name: "Teresa de Benguela", image: "Tereza-de-Benguela-a-estrategista-que-governou-o-Quilombo-Quararite.jpg", gender: 'f', category: 'resistencia',
+                bio: "Foi uma 'Rainha' que liderou o Quilombo de Quariterê, no Mato Grosso, no século XVIII, após a morte de seu companheiro. Liderou uma comunidade de negros e indígenas, resistindo bravamente à escravidão por mais de 20 anos.",
+                clues: ["Eu fui uma 'Rainha' e liderei um grande quilombo no Mato Grosso.", "Meu quilombo se chamava Quariterê.", "Organizei a produção e a defesa da minha comunidade, que tinha negros e indígenas."]
+            },
+            {
+                id: 7, name: "André Rebouças", image: "Reboucas_dentro.jpg", gender: 'm', category: 'ciencia',
+                bio: "Foi um engenheiro, inventor e um dos maiores articuladores do movimento abolicionista. Filho de um deputado negro, teve acesso à educação de elite e usou seu prestígio e inteligência para planejar fugas de escravizados e financiar a causa da liberdade.",
+                clues: ["Eu fui um importante engenheiro e inventor no Segundo Reinado.", "Usei minha influência e dinheiro para lutar pelo fim da escravidão.", "Ajudei a planejar grandes obras de engenharia no Rio de Janeiro."]
+            },
+            {
+                id: 8, name: "Luísa Mahin", image: "LUIZA-MAHIN.jpg", gender: 'f', category: 'resistencia',
+                bio: "Uma figura lendária da resistência negra em Salvador. Embora sua existência seja debatida, ela é um símbolo da Revolta dos Malês (1835), uma das maiores rebeliões de escravizados do Brasil. Diz-se que ela usava sua banca de quituteira para organizar a revolta. É a mãe de Luiz Gama.",
+                clues: ["Eu vivi em Salvador, na Bahia, e participei da Revolta dos Malês.", "Dizem que eu usava minha barraca de comida para passar mensagens secretas.", "Meu filho também se tornou um dos maiores heróis negros do Brasil."]
+            },
+            {
+                id: 9, name: "Aleijadinho", image: "not_23_8_19_aleijadinho.jpg", gender: 'm', category: 'arte',
+                bio: "Considerado o maior artista do Barroco no Brasil. Mesmo com uma doença que deformou seu corpo, ele esculpiu obras-primas em pedra-sabão, principalmente em Minas Gerais, como os 'Doze Profetas' em Congonhas.",
+                clues: ["Eu fui um escultor e arquiteto no Brasil Colonial.", "Minhas obras mais famosas estão em Minas Gerais.", "Continuei trabalhando mesmo com uma doença grave, ganhando meu apelido."]
+            },
+            {
+                id: 10, name: "Mestre Bimba", image: "6107ef96-4f01-49df-bbff-87c600124e56.jpeg", gender: 'm', category: 'capoeira',
+                bio: "Foi o criador da 'Capoeira Regional'. Ele organizou a capoeira, que era proibida, como uma luta e arte marcial respeitada. Fundou a primeira academia de capoeira do Brasil em Salvador.",
+                clues: ["Eu transformei a capoeira de rua em uma luta respeitada.", "Criei o estilo conhecido como 'Capoeira Regional'.", "Fundei a primeira academia de capoeira em Salvador."]
+            },
+            {
+                id: 11, name: "Pixinguinha", image: "pixinguinha.jpg", gender: 'm', category: 'cultura',
+                bio: "Foi um dos maiores gênios da música popular brasileira. Como compositor, flautista e saxofonista, ele ajudou a criar o 'Choro' e a definir a cara da música do Brasil no mundo.",
+                clues: ["Eu sou um dos pais do 'Choro'.", "Tocava flauta e saxofone de forma genial.", "Compus músicas famosas como 'Carinhoso'."]
+            },
+            {
+                id: 12, name: "Carolina Maria de Jesus", image: "escritora-c.webp", gender: 'f', category: 'cultura',
+                bio: "Foi uma escritora que morava na favela do Canindé, em São Paulo. Ela catava papel para viver e escrevia em cadernos velhos. Seu livro 'Quarto de Despejo' virou um best-seller mundial, contando a dura realidade da favela.",
+                clues: ["Eu era catadora de papel e morava em uma favela.", "Escrevi um diário que virou um livro famoso mundialmente.", "Meu livro mais conhecido é 'Quarto de Despejo'."]
+            },
+            {
+                id: 13, name: "Teodoro Sampaio", image: "imagem-2021-11-19-173001-678x381.webp", gender: 'm', category: 'ciencia',
+                bio: "Foi um engenheiro, geógrafo, historiador e escritor. Filho de uma escrava, tornou-se um dos maiores intelectuais do seu tempo, estudando rios, mapas e a língua Tupi. Foi um grande defensor da educação.",
+                clues: ["Fui um grande engenheiro e geógrafo no século XIX.", "Era especialista na língua Tupi e na história do Brasil.", "Participei de grandes obras de saneamento em São Paulo."]
+            },
+            {
+                id: 14, name: "Esperança Garcia", image: "esperanca-garcia-a-primeira-advogada-do-brasil-1670717303305_v2_450x600.jpg.webp", gender: 'f', category: 'politica',
+                bio: "Uma mulher escravizada no Piauí que, em 1770, escreveu uma carta ao governador denunciando os maus-tratos. Sua carta é considerada por muitos como a primeira 'petição' de uma advogada no Brasil.",
+                clues: ["Eu vivi no Piauí no século XVIII.", "Escrevi uma carta corajosa denunciando os maus-tratos que eu sofria.", "Minha carta é vista como um dos primeiros atos de advocacia no Brasil."]
+            },
+            {
+                id: 15, name: "Abdias do Nascimento", image: "abdiasnascimento_0.jpg", gender: 'm', category: 'cultura',
+                bio: "Foi um artista, escritor, político e um dos maiores ativistas do movimento negro no Brasil. Ele fundou o 'Teatro Experimental do Negro' para valorizar a cultura negra e combater o racismo.",
+                clues: ["Eu fundei o 'Teatro Experimental do Negro' (TEN).", "Lutei minha vida inteira contra o racismo.", "Fui artista, escritor e também senador da República."]
+            },
+            {
+                id: 16, name: "Laudelina de Campos Melo", image: "download.jpeg", gender: 'f', category: 'politica',
+                bio: "Foi uma ativista que dedicou a vida à luta pelos direitos das trabalhadoras domésticas. Ela fundou o primeiro sindicato de domésticas do Brasil, buscando reconhecimento e direitos para a categoria.",
+                clues: ["Eu também fui trabalhadora doméstica.", "Fundei o primeiro sindicato para essa profissão no Brasil.", "Dediquei minha vida a lutar por direitos e dignidade para as domésticas."]
+            },
+            {
+                id: 17, name: "Ruth de Souza", image: "ruth-de-souza-primeira-novela.webp", gender: 'f', category: 'arte',
+                bio: "Foi uma das maiores atrizes do Brasil e pioneira no teatro, cinema e TV. Foi a primeira atriz negra a se apresentar no Theatro Municipal do Rio e a primeira brasileira indicada a um prêmio de melhor atriz em um grande festival internacional.",
+                clues: ["Eu fui uma atriz pioneira no teatro e na TV.", "Fui a primeira atriz negra brasileira indicada a um prêmio internacional de cinema.", "Abri as portas para muitas outras artistas negras."]
+            },
+            {
+                id: 18, name: "Milton Santos", image: "images.webp", gender: 'm', category: 'ciencia',
+                bio: "Foi um dos maiores geógrafos do mundo. Ganhou o Prêmio Vautrin Lud, considerado o 'Nobel' da Geografia. Seus estudos sobre a globalização e o espaço urbano mostraram uma nova forma de entender o mundo.",
+                clues: ["Eu fui um professor e geógrafo mundialmente famoso.", "Estudei a globalização e as cidades.", "Ganhei o 'Nobel' da Geografia (Prêmio Vautrin Lud)."]
+            },
+            {
+                id: 19, name: "Mestre Pastinha", image: "Mestre_Pastinha.jpg", gender: 'm', category: 'capoeira',
+                bio: "Foi o grande defensor da 'Capoeira Angola'. Ele dedicou sua vida a preservar as raízes africanas da capoeira, focando no jogo, na malandragem e na filosofia, e não apenas na luta.",
+                clues: ["Eu sou o grande guardião da 'Capoeira Angola'.", "Minha capoeira é mais um jogo e uma filosofia.", "Eu usava as cores amarelo e preto."]
+            },
+            {
+                id: 20, name: "Aqualtune", image: "12428-conheca-aqualtune-avo-de-zumbi-dos-palmares.jpg", gender: 'f', category: 'resistencia',
+                bio: "Foi uma princesa africana, avó de Zumbi dos Palmares. Segundo a história, ela foi capturada e trazida ao Brasil, mas liderou uma fuga e ajudou a fundar o Quilombo dos Palmares, sendo uma de suas primeiras líderes.",
+                clues: ["Eu era uma princesa africana antes de ser escravizada.", "Fugi e ajudei a fundar o Quilombo dos Palmares.", "Eu sou a avó de Zumbi dos Palmares."]
+            }
+        ];
+
+        // --- BANCO DE DADOS DE MEDALHAS ---
+        const MEDAL_DATABASE = {
+            // --- PLATINUM ---
+            'platinum_legend': { name: "Lenda da História", desc: "Conquiste todas as outras 24 medalhas.", type: 'platinum', icon: 'fa-trophy' },
+            // --- GOLD ---
+            'gold_master': { name: "Detetive Mestre", desc: "Termine o jogo com mais de 1500 pontos.", type: 'gold', icon: 'fa-user-secret' },
+            'gold_perfect': { name: "Historiador(a) Perfeito", desc: "Acerte todos os 20 heróis na primeira tentativa.", type: 'gold', icon: 'fa-star' },
+            'gold_female_voices': { name: "Vozes Femininas", desc: "Acerte todas as 10 heroínas.", type: 'gold', icon: 'fa-venus' },
+            'gold_male_voices': { name: "Vozes Masculinas", desc: "Acerte todos os 10 heróis.", type: 'gold', icon: 'fa-mars' },
+            'gold_culture_king': { name: "Rei/Rainha da Cultura", desc: "Acerte todos os 8 heróis das categorias 'Cultura', 'Arte' e 'Capoeira'.", type: 'gold', icon: 'fa-palette' },
+            // --- SILVER ---
+            'silver_senior': { name: "Detetive Sênior", desc: "Termine o jogo com mais de 1000 pontos.", type: 'silver', icon: 'fa-user-tie' },
+            'silver_no_errors': { name: "Sem Erros", desc: "Complete o jogo sem errar nenhuma vez.", type: 'silver', icon: 'fa-check-double' },
+            'silver_efficient': { name: "Eficiente", desc: "Acerte 15 heróis na primeira tentativa.", type: 'silver', icon: 'fa-thumbs-up' },
+            'silver_almost_perfect': { name: "Quase Perfeito", desc: "Acerte 19 de 20 heróis na primeira tentativa.", type: 'silver', icon: 'fa-award' },
+            'silver_resistance': { name: "A Luta Vive", desc: "Acerte todos os 5 heróis da 'Resistência'.", type: 'silver', icon: 'fa-fist-raised' },
+            'silver_science': { name: "Mente Brilhante", desc: "Acerte todos os 3 heróis da 'Ciência'.", type: 'silver', icon: 'fa-flask' },
+            'silver_politics': { name: "Poder Político", desc: "Acerte todos os 4 heróis da 'Política'.", type: 'silver', icon: 'fa-landmark' },
+            'silver_one_clue_5': { name: "Ouvido Atento", desc: "Acerte 5 heróis usando apenas 1 pista.", type: 'silver', icon: 'fa-ear-listen' },
+            'silver_fast_start': { name: "Começo Rápido", desc: "Acerte o primeiro herói na primeira tentativa.", type: 'silver', icon: 'fa-rocket' },
+            // --- BRONZE ---
+            'bronze_junior': { name: "Detetive Júnior", desc: "Complete o jogo pela primeira vez.", type: 'bronze', icon: 'fa-search' },
+            'bronze_first_correct': { name: "Primeiro Acerto", desc: "Acerte seu primeiro herói.", type: 'bronze', icon: 'fa-check' },
+            'bronze_intuition': { name: "Intuição", desc: "Acerte um herói na primeira tentativa.", type: 'bronze', icon: 'fa-lightbulb' },
+            'bronze_streak_5': { name: "Embalado(a)!", desc: "Acerte 5 heróis seguidos (sem errar).", type: 'bronze', icon: 'fa-fire' },
+            'bronze_one_clue': { name: "Economista", desc: "Acerte um herói usando apenas 1 pista.", type: 'bronze', icon: 'fa-leaf' },
+            'bronze_curious': { name: "Curioso(a)", desc: "Use todas as 3 pistas para um herói.", type: 'bronze', icon: 'fa-book-open' },
+            'bronze_first_error': { name: "Acontece", desc: "Erre uma resposta pela primeira vez.", type: 'bronze', icon: 'fa-times' },
+            'bronze_capoeira': { name: "Gingado", desc: "Acerte Mestre Bimba e Mestre Pastinha.", type: 'bronze', icon: 'fa-people-group' },
+            'bronze_resilience': { name: "Resiliência", desc: "Erre 5 vezes, mas complete o jogo.", type: 'bronze', icon: 'fa-shield-alt' },
+            'bronze_tourist': { name: "Turista do Tempo", desc: "Jogue o jogo mais de uma vez.", type: 'bronze', icon: 'fa-history' }
+        };
+        const MEDAL_ORDER = [
+            'platinum_legend', 'gold_master', 'gold_perfect', 'gold_female_voices', 'gold_male_voices', 'gold_culture_king',
+            'silver_senior', 'silver_no_errors', 'silver_efficient', 'silver_almost_perfect', 'silver_resistance',
+            'silver_science', 'silver_politics', 'silver_one_clue_5', 'silver_fast_start', 'bronze_junior',
+            'bronze_first_correct', 'bronze_intuition', 'bronze_streak_5', 'bronze_one_clue', 'bronze_curious',
+            'bronze_first_error', 'bronze_capoeira', 'bronze_resilience', 'bronze_tourist'
+        ];
+
+        // --- VARIÁVEIS DE ESTADO DO JOGO ---
+        let currentHeroIndex = 0;
+        let currentClueIndex = 0;
+        let heroesList = [];
+        let collectedHeroes = []; 
+        let gameActive = false;
+        let score = 0;
+
+        // --- Variáveis de Salvamento e Medalhas ---
+        let unlockedMedals = new Set();
+        let gameCompletions = 0;
+        let currentAttempts = 0; 
+        let correctStreak = 0;
+        let firstTryCorrect = 0;
+        let totalErrors = 0;
+        let oneClueCorrect = 0;
+        let threeCluesUsed = 0;
+        let correctCategories = { resistencia: 0, politica: 0, cultura: 0, arte: 0, ciencia: 0, capoeira: 0 };
+        let correctGenders = { m: 0, f: 0 };
+
+
+        // --- SELETORES DE ELEMENTOS DOM ---
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        
+        const heroImage = document.getElementById('hero-image');
+        const heroName = document.getElementById('hero-name');
+        const cluesArea = document.getElementById('clues-area');
+        const clueButton = document.getElementById('clue-button');
+        const optionsArea = document.getElementById('options-area');
+        const feedbackArea = document.getElementById('feedback-area');
+
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreText = document.getElementById('score-text');
+        
+        const bioModal = document.getElementById('bio-modal');
+        const closeModalButton = document.getElementById('close-modal');
+        const modalImage = document.getElementById('modal-image');
+        const modalName = document.getElementById('modal-name');
+        const modalBio = document.getElementById('modal-bio');
+        const nextHeroButton = document.getElementById('next-hero-button');
+
+        const galleryArea = document.getElementById('gallery-area');
+        const medalGalleryArea = document.getElementById('medal-gallery-area');
+        const showHeroBtn = document.getElementById('show-hero-gallery-btn');
+        const showMedalBtn = document.getElementById('show-medal-gallery-btn');
+        const heroGalleryContent = document.getElementById('hero-gallery-content');
+        const medalGalleryContent = document.getElementById('medal-gallery-content');
+
+        const medalPopup = document.getElementById('medal-popup');
+        const medalPopupIcon = document.getElementById('medal-popup-icon');
+        const medalPopupTitle = document.getElementById('medal-popup-title');
+        const medalPopupDesc = document.getElementById('medal-popup-desc');
+
+
+        // --- FUNÇÕES DE SALVAMENTO E MEDALHAS ---
+
+        function loadProgress() {
+            try {
+                unlockedMedals = new Set(JSON.parse(localStorage.getItem('unlockedMedals_v2') || '[]'));
+                gameCompletions = parseInt(localStorage.getItem('gameCompletions_v2') || '0');
+            } catch (e) {
+                console.error("Erro ao carregar progresso", e);
+            }
+        }
+
+        function saveProgress() {
+            try {
+                localStorage.setItem('unlockedMedals_v2', JSON.stringify([...unlockedMedals]));
+                localStorage.setItem('gameCompletions_v2', gameCompletions);
+            } catch (e) {
+                console.error("Erro ao salvar progresso", e);
+            }
+        }
+
+        function showMedalPopup(medalId) {
+            const medal = MEDAL_DATABASE[medalId];
+            if (!medal) return;
+
+            medalPopupIcon.innerHTML = `<i class="fas ${medal.icon}"></i>`;
+            medalPopupIcon.className = `medal-icon-popup ${medal.type}`;
+            
+            // Borda colorida baseada no tipo
+            let borderColor = '#cd7f32';
+            if(medal.type === 'silver') borderColor = '#c0c0c0';
+            if(medal.type === 'gold') borderColor = '#ffd700';
+            if(medal.type === 'platinum') borderColor = '#e5e4e2';
+            
+            medalPopup.style.borderLeftColor = borderColor;
+
+            medalPopupTitle.textContent = medal.name;
+            medalPopupDesc.textContent = medal.desc;
+
+            medalPopup.classList.add('show');
+            setTimeout(() => {
+                medalPopup.classList.remove('show');
+            }, 4000);
+        }
+
+        function unlockMedal(medalId) {
+            if (!unlockedMedals.has(medalId)) {
+                unlockedMedals.add(medalId);
+                saveProgress();
+                showMedalPopup(medalId);
+                
+                if (medalId !== 'platinum_legend' && unlockedMedals.size === 24) {
+                    unlockMedal('platinum_legend');
+                }
+            }
+        }
+
+        // --- FUNÇÕES DO JOGO ---
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            loadProgress(); 
+
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            heroesList = shuffleArray([...heroesData]);
+            currentHeroIndex = 0;
+            collectedHeroes = []; 
+            gameActive = true;
+            score = 0;
+            
+            currentAttempts = 0;
+            correctStreak = 0;
+            firstTryCorrect = 0;
+            totalErrors = 0;
+            oneClueCorrect = 0;
+            threeCluesUsed = 0;
+            correctCategories = { resistencia: 0, politica: 0, cultura: 0, arte: 0, ciencia: 0, capoeira: 0 };
+            correctGenders = { m: 0, f: 0 };
+            
+            if (gameCompletions > 0) {
+                unlockMedal('bronze_tourist');
+            }
+            
+            updateScoreDisplay();
+            updateProgress();
+            loadHero(heroesList[currentHeroIndex]);
+        }
+
+        function loadHero(hero) {
+            if (!hero) return;
+
+            heroName.textContent = "???";
+            heroImage.src = "https://placehold.co/200x200/3A3331/E2E8F0?text=???"; 
+            heroImage.classList.add('hero-shadowed');
+            
+            cluesArea.innerHTML = "";
+            optionsArea.innerHTML = "";
+            feedbackArea.textContent = "";
+            currentClueIndex = 0;
+            currentAttempts = 0; 
+            
+            clueButton.classList.remove('hidden');
+            clueButton.disabled = false;
+            clueButton.innerHTML = `Pedir a 1ª Pista <i class="fas fa-search-plus"></i>`;
+            
+            updateProgress();
+        }
+
+        function showClue() {
+            if (!gameActive) return;
+
+            const hero = heroesList[currentHeroIndex];
+            if (currentClueIndex < hero.clues.length) {
+                const clueElement = document.createElement('p');
+                clueElement.textContent = `Pista ${currentClueIndex + 1}: ${hero.clues[currentClueIndex]}`;
+                clueElement.style.color = "#d6d3d1";
+                clueElement.style.backgroundColor = "#1c1917";
+                clueElement.style.padding = "8px";
+                clueElement.style.borderRadius = "8px";
+                clueElement.className = 'fade-in';
+                
+                cluesArea.appendChild(clueElement);
+                
+                currentClueIndex++;
+                
+                if (currentClueIndex === 3) {
+                    threeCluesUsed++;
+                    unlockMedal('bronze_curious');
+                }
+                
+                if (currentClueIndex < hero.clues.length) {
+                    clueButton.innerHTML = `Pedir a ${currentClueIndex + 1}ª Pista <i class="fas fa-search-plus"></i>`;
+                } else {
+                    clueButton.textContent = "Todas as Pistas Reveladas";
+                    clueButton.disabled = true;
+                }
+
+                if (currentClueIndex === 1) {
+                    showOptions();
+                }
+            }
+        }
+
+        function showOptions() {
+            const correctHero = heroesList[currentHeroIndex];
+            
+            let wrongOptionsPool = heroesList.slice(currentHeroIndex + 1);
+            if (wrongOptionsPool.length < 3) {
+              const pastHeroes = heroesList.slice(0, currentHeroIndex);
+              wrongOptionsPool = wrongOptionsPool.concat(pastHeroes);
+            }
+            
+            let shuffledWrongPool = shuffleArray(wrongOptionsPool);
+            let options = shuffledWrongPool.slice(0, 3).map(h => h.name);
+            options.push(correctHero.name);
+            options = shuffleArray(options);
+
+            optionsArea.innerHTML = "";
+            options.forEach(name => {
+                const button = document.createElement('button');
+                button.textContent = name;
+                button.className = "btn-option fade-in";
+                button.onclick = () => checkAnswer(name);
+                optionsArea.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedName) {
+            if (!gameActive) return;
+            gameActive = false; 
+
+            const hero = heroesList[currentHeroIndex];
+            const correctName = hero.name;
+            currentAttempts++; 
+
+            if (selectedName === correctName) {
+                // --- ACERTOU ---
+                feedbackArea.textContent = "Correto!";
+                feedbackArea.style.color = "#fbbf24"; // Amarelo
+                
+                const cluesUsed = currentClueIndex;
+                let pointsGained = (cluesUsed === 1) ? 100 : (cluesUsed === 2) ? 70 : 40;
+                score += pointsGained;
+                updateScoreDisplay();
+                
+                checkMedalsOnCorrect(hero, currentAttempts, cluesUsed);
+                
+                revealHero();
+                showBioModal(hero);
+
+            } else {
+                // --- ERROU ---
+                feedbackArea.textContent = `Errado! A resposta correta era ${correctName}.`;
+                feedbackArea.style.color = "#ef4444"; // Vermelho
+                
+                score -= 10;
+                if (score < 0) score = 0;
+                updateScoreDisplay();
+
+                totalErrors++;
+                correctStreak = 0;
+                if (totalErrors === 1) {
+                    unlockMedal('bronze_first_error');
+                }
+
+                revealHero(); 
+                setTimeout(goToNextHero, 3000); // Espera 3s para ler
+            }
+        }
+
+        function checkMedalsOnCorrect(hero, attempts, cluesUsed) {
+            correctStreak++;
+            correctGenders[hero.gender]++;
+            correctCategories[hero.category]++;
+            
+            if (currentHeroIndex === 0) { 
+                 unlockMedal('bronze_first_correct');
+            }
+            if (attempts === 1) {
+                firstTryCorrect++;
+                unlockMedal('bronze_intuition');
+                if (currentHeroIndex === 0) {
+                    unlockMedal('silver_fast_start');
+                }
+            }
+            if (cluesUsed === 1) {
+                oneClueCorrect++;
+                unlockMedal('bronze_one_clue');
+            }
+
+            if (correctStreak === 5) unlockMedal('bronze_streak_5');
+            if (oneClueCorrect === 5) unlockMedal('silver_one_clue_5');
+        }
+
+        function checkEndGameMedals() {
+            gameCompletions++;
+            localStorage.setItem('gameCompletions_v2', gameCompletions);
+
+            if (score > 0) unlockMedal('bronze_junior');
+            if (score > 1000) unlockMedal('silver_senior');
+            if (score > 1500) unlockMedal('gold_master');
+            
+            if (totalErrors === 0) unlockMedal('silver_no_errors');
+            if (totalErrors >= 5) unlockMedal('bronze_resilience');
+            
+            if (firstTryCorrect === 15) unlockMedal('silver_efficient');
+            if (firstTryCorrect === 19) unlockMedal('silver_almost_perfect');
+            if (firstTryCorrect === 20) unlockMedal('gold_perfect');
+            
+            if (correctGenders.f === 10) unlockMedal('gold_female_voices');
+            if (correctGenders.m === 10) unlockMedal('gold_male_voices');
+            if (correctCategories.resistencia === 5) unlockMedal('silver_resistance');
+            if (correctCategories.ciencia === 3) unlockMedal('silver_science');
+            if (correctCategories.politica === 4) unlockMedal('silver_politics');
+            if (correctCategories.capoeira === 2) unlockMedal('bronze_capoeira');
+            
+            const cultureTotal = correctCategories.cultura + correctCategories.arte + correctCategories.capoeira;
+            if (cultureTotal === 8) unlockMedal('gold_culture_king');
+
+            if (unlockedMedals.size === 24) {
+                 unlockMedal('platinum_legend');
+            }
+        }
+
+        function revealHero() {
+            const hero = heroesList[currentHeroIndex];
+            heroName.textContent = hero.name;
+            heroImage.classList.remove('hero-shadowed');
+            heroImage.src = hero.image; 
+            
+            clueButton.classList.add('hidden');
+            optionsArea.innerHTML = ""; 
+            
+            if (!collectedHeroes.find(h => h.id === hero.id)) {
+                collectedHeroes.push(hero);
+            }
+        }
+
+        function showBioModal(hero) {
+            modalImage.src = hero.image;
+            modalName.textContent = hero.name;
+            modalBio.textContent = hero.bio;
+            bioModal.classList.remove('hidden');
+        }
+
+        function goToNextHero() {
+            bioModal.classList.add('hidden');
+            currentHeroIndex++;
+
+            if (currentHeroIndex < heroesList.length) {
+                gameActive = true;
+                loadHero(heroesList[currentHeroIndex]);
+            } else {
+                checkEndGameMedals();
+                showEndScreen();
+            }
+        }
+
+        function updateProgress() {
+            const totalHeroes = heroesList.length;
+            const current = currentHeroIndex + 1;
+            
+            if (current <= totalHeroes && totalHeroes > 0) {
+                progressText.textContent = `Herói ${current} / ${totalHeroes}`;
+                const percent = (current / totalHeroes) * 100;
+                progressBar.style.width = `${percent}%`;
+            }
+        }
+
+        function updateScoreDisplay() {
+            scoreText.textContent = `Pontuação: ${score}`;
+        }
+
+        function showEndScreen() {
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            document.getElementById('final-score-value').textContent = score;
+
+            // Preenche a galeria de Heróis
+            galleryArea.innerHTML = "";
+            const sortedHeroes = [...heroesData].sort((a, b) => a.name.localeCompare(b.name));
+            sortedHeroes.forEach(hero => {
+                const heroCard = document.createElement('div');
+                heroCard.style.display = "flex";
+                heroCard.style.alignItems = "flex-start";
+                heroCard.style.gap = "15px";
+                heroCard.style.padding = "10px";
+                heroCard.style.background = "#292524";
+                heroCard.style.borderRadius = "8px";
+                
+                heroCard.innerHTML = `
+                    <img src="${hero.image}" alt="${hero.name}" style="width: 60px; height: 60px; border-radius: 8px; border: 2px solid #fbbf24; object-fit: cover; flex-shrink: 0;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 1.1rem; color: #fbbf24; font-weight: bold;">${hero.name}</h4>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #d6d3d1;">${hero.bio}</p>
+                    </div>
+                `;
+                galleryArea.appendChild(heroCard);
+            });
+
+            // Preenche a galeria de Medalhas
+            medalGalleryArea.innerHTML = "";
+            
+            // Grupos de HTML
+            let unlockedHtml = `<h3 style="font-size: 1.1rem; color: white; margin-bottom: 10px; width: 100%;">Medalhas Conquistadas (${unlockedMedals.size}/${MEDAL_ORDER.length-1})</h3><div class="medal-gallery-grid">`;
+            let lockedHtml = `<h3 style="font-size: 1.1rem; color: #78716c; margin: 20px 0 10px 0; width: 100%;">Ainda Faltam</h3><div class="medal-gallery-grid">`;
+            
+            let hasUnlocked = false;
+            let hasLocked = false;
+
+            MEDAL_ORDER.forEach(medalId => {
+                const medal = MEDAL_DATABASE[medalId];
+                const isUnlocked = unlockedMedals.has(medalId);
+                
+                // Cor do texto baseada no tipo
+                let typeColor = '#cd7f32';
+                if(medal.type === 'silver') typeColor = '#c0c0c0';
+                if(medal.type === 'gold') typeColor = '#ffd700';
+                if(medal.type === 'platinum') typeColor = '#e5e4e2';
+
+                const cardHtml = `
+                    <div class="medal-card ${isUnlocked ? '' : 'locked'}">
+                        <div class="medal-card-icon" style="color: ${typeColor}">
+                            <i class="fas ${medal.icon}"></i>
+                        </div>
+                        <div class="medal-card-info">
+                            <h4 style="margin: 0; font-weight: bold; color: ${typeColor};">${medal.name}</h4>
+                            <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: #a8a29e;">${medal.desc}</p>
+                        </div>
+                    </div>
+                `;
+                
+                if (isUnlocked) {
+                    unlockedHtml += cardHtml;
+                    hasUnlocked = true;
+                } else {
+                    lockedHtml += cardHtml;
+                    hasLocked = true;
+                }
+            });
+
+            unlockedHtml += '</div>';
+            lockedHtml += '</div>';
+
+            if (!hasUnlocked) unlockedHtml = `<p style="color: #78716c; font-style: italic;">Nenhuma medalha conquistada ainda.</p>`;
+            
+            medalGalleryArea.innerHTML = unlockedHtml + lockedHtml;
+
+            // Reseta para a primeira aba
+            showHeroBtn.click(); 
+        }
+
+        // --- EVENT LISTENERS ---
+        startButton.addEventListener('click', initGame);
+        restartButton.addEventListener('click', initGame);
+        clueButton.addEventListener('click', showClue);
+        closeModalButton.addEventListener('click', goToNextHero);
+        nextHeroButton.addEventListener('click', goToNextHero);
+
+        // Listeners das Abas da Tela Final
+        showHeroBtn.addEventListener('click', () => {
+            heroGalleryContent.classList.add('active');
+            medalGalleryContent.classList.remove('active');
+            showHeroBtn.classList.add('active');
+            showMedalBtn.classList.remove('active');
+        });
+
+        showMedalBtn.addEventListener('click', () => {
+            heroGalleryContent.classList.remove('active');
+            medalGalleryContent.classList.add('active');
+            showHeroBtn.classList.remove('active');
+            showMedalBtn.classList.add('active');
+        });
+
+        // Carrega o progresso salvo ao iniciar a página (se houver)
+        loadProgress();
+
+    </script>
+</body>
+</html>
